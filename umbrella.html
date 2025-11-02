@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Umbrella Customizer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --accent: #ffd05b;
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --panel-text: #0c1824;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Audiowide", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--panel-text)
+    }
+
+    .wrap {
+      display: flex;
+      align-items: center;
+      gap: 36px;
+      padding: 44px 8vw;
+      min-height: 100vh
+    }
+
+    .stage {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center
+    }
+
+    .umbrella-wrap {
+      position: relative;
+      width: 680px;
+      height: 680px;
+      background: linear-gradient(180deg, #fff, #fbfbfd);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 18px 40px rgba(6, 22, 40, 0.08)
+    }
+
+    .umbrella-source {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      z-index: 1;
+      display: block;
+      background: transparent;
+      box-shadow: none;
+      filter: grayscale(0.02) contrast(1.02) brightness(0.98);
+      -webkit-user-drag: none;
+      user-select: none;
+      pointer-events: none
+    }
+
+    .umbrella-fill {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      -webkit-mask-image: url("image.png");
+      -webkit-mask-size: contain;
+      -webkit-mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      mask-image: url("image.png");
+      mask-size: contain;
+      mask-repeat: no-repeat;
+      mask-position: center;
+      background: var(--accent);
+      mix-blend-mode: color;
+      transition: background 260ms cubic-bezier(.2, .9, .29, 1), transform 260ms ease;
+      pointer-events: none
+    }
+
+    .logo-preview {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      bottom: 82px;
+      max-width: 25%;
+      max-height: 8%;
+      object-fit: contain;
+      pointer-events: auto;
+      cursor: grab;
+      opacity: 0;
+      transition: opacity .3s, transform .3s;
+      border-radius: 6px;
+      z-index: 5;
+      background: transparent;
+      box-shadow: none;
+      -webkit-user-drag: none
+    }
+
+    .logo-preview.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0)
+    }
+
+    .loader-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.6);
+      z-index: 6;
+      transition: opacity .2s, visibility .2s
+    }
+
+    .loader-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none
+    }
+
+    .spinner {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 6px solid rgba(0, 0, 0, 0.06);
+      border-top-color: var(--accent);
+      animation: spin 1s linear infinite
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .panel {
+      width: 420px;
+      background: var(--card-bg);
+      padding: 26px;
+      border-radius: 14px;
+      backdrop-filter: blur(6px) saturate(1.08);
+      box-shadow: 0 10px 30px rgba(6, 22, 40, 0.06);
+      border: 1px solid rgba(12, 24, 36, 0.04)
+    }
+
+    h1 {
+      font-size: 30px;
+      margin: 0 0 6px 0
+    }
+
+    .hero {
+      font-size: 15px;
+      margin: 0 0 12px 0;
+      color: rgba(12, 24, 36, 0.7)
+    }
+
+    .swatches {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 14px
+    }
+
+    .swatch {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      border: 3px solid rgba(0, 0, 0, 0.06);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform .16s
+    }
+
+    .swatch.active {
+      outline: 5px solid rgba(255, 255, 255, 0.45);
+      outline-offset: 2px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08)
+    }
+
+    .upload-btn {
+      display: inline-flex;
+      gap: 12px;
+      align-items: center;
+      background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 70%, black 8%));
+      color: white;
+      padding: 12px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 800
+    }
+
+    .upload-btn input {
+      display: none
+    }
+
+    .download-row {
+      margin-top: 14px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    .download-btn {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      background: #0c1824;
+      color: white
+    }
+
+    .download-btn[disabled] {
+      opacity: 0.6;
+      cursor: default
+    }
+
+    .small {
+      color: rgba(0, 0, 0, 0.55);
+      margin-top: 8px
+    }
+
+    @media(max-width:980px) {
+      .wrap {
+        flex-direction: column;
+        padding: 30px
+      }
+
+      .panel {
+        width: 100%;
+        text-align: center
+      }
+
+      .stage {
+        order: 2
+      }
+
+      .umbrella-wrap {
+        width: 92vw;
+        height: 92vw
+      }
+
+      .logo-preview {
+        bottom: 48px
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="stage">
+      <div class="umbrella-wrap" id="container">
+        <img id="umbrella" class="umbrella-source" src="image.png" alt="umbrella" />
+        <div id="fill" class="umbrella-fill"></div>
+        <img id="logo" class="logo-preview" src="" alt="logo preview" style="display:none" />
+        <div id="loader" class="loader-overlay" style="display:flex">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h1>Make it yours</h1>
+      <div class="hero">Pick a color, upload your logo, position it, and download your custom umbrella.</div>
+      <div class="swatches">
+        <div class="swatch" data-color="#ff5aa5" style="background:#ff5aa5"></div>
+        <div class="swatch" data-color="#00b4e6" style="background:#00b4e6"></div>
+        <div class="swatch active" data-color="#ffd05b" style="background:#ffd05b"></div>
+      </div>
+      <label class="upload-btn" id="uploadBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M8 7l4-4 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+            stroke-linejoin="round" />
+          <rect x="3" y="15" width="18" height="6" rx="2" stroke="currentColor" stroke-width="1.6"
+            stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span>Upload logo</span>
+        <input id="fileInput" type="file" accept="image/png, image/jpeg" />
+      </label>
+      <div class="download-row">
+        <button id="downloadJpg" class="download-btn" disabled>Download JPG</button>
+        <div id="exportStatus" style="margin-left:8px;font-weight:700;color:#0c1824"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const swatches = document.querySelectorAll('.swatch')
+    const fill = document.getElementById('fill')
+    const umbrella = document.getElementById('umbrella')
+    const logo = document.getElementById('logo')
+    const fileInput = document.getElementById('fileInput')
+    const loader = document.getElementById('loader')
+    const container = document.getElementById('container')
+    const downloadJpg = document.getElementById('downloadJpg')
+    const exportStatus = document.getElementById('exportStatus')
+
+    let activeColor = '#ffd05b'
+    let logoState = { x: 0.5, y: 0.78, visible: false, img: null }
+    document.documentElement.style.setProperty('--accent', activeColor)
+    fill.style.background = activeColor
+
+    umbrella.addEventListener('load', () => { loader.classList.add('hidden') })
+    if (umbrella.complete) loader.classList.add('hidden')
+
+    swatches.forEach(s => s.addEventListener('click', () => {
+      swatches.forEach(x => x.classList.remove('active'))
+      s.classList.add('active')
+      activeColor = s.dataset.color
+      document.documentElement.style.setProperty('--accent', activeColor)
+      fill.style.background = activeColor
+    }))
+
+    fileInput.addEventListener('change', e => {
+      const f = e.target.files && e.target.files[0]
+      if (!f) return
+      if (f.size > 5 * 1024 * 1024) { alert('File too large. Max 5MB.'); return }
+      loader.classList.remove('hidden')
+      const url = URL.createObjectURL(f)
+      const img = new Image()
+      img.onload = () => {
+        logoState.img = img
+        logoState.visible = true
+        applyLogoToDOM()
+        loader.classList.add('hidden')
+        downloadJpg.disabled = false
+      }
+      img.src = url
+    })
+
+    function applyLogoToDOM() {
+      if (!logoState.img || !logoState.visible) { logo.style.display = 'none'; return }
+      const cw = container.clientWidth
+      const ch = container.clientHeight
+      const w = Math.min(cw * 0.25, logoState.img.width)
+      const h = Math.min(ch * 0.08, w * (logoState.img.height / logoState.img.width))
+      const leftPx = (logoState.x * cw - w / 2)
+      const topPx = (logoState.y * ch - h / 2)
+      logo.style.width = w + 'px'
+      logo.style.height = h + 'px'
+      logo.style.left = (leftPx + w / 2) + 'px'
+      logo.style.top = topPx + 'px'
+      logo.style.transform = 'translateX(-50%)'
+      logo.src = logoState.img.src
+      logo.style.display = 'block'
+      logo.classList.add('visible')
+    }
+
+    ; (function enableDrag() {
+      let dragging = false, offset = { x: 0, y: 0 }, pointerId = null
+      logo.addEventListener('pointerdown', e => {
+        if (!logoState.visible) return
+        dragging = true
+        pointerId = e.pointerId
+        try { logo.setPointerCapture(pointerId) } catch { }
+        const rect = logo.getBoundingClientRect()
+        offset.x = e.clientX - rect.left
+        offset.y = e.clientY - rect.top
+        logo.style.cursor = 'grabbing'
+      })
+      window.addEventListener('pointermove', e => {
+        if (!dragging) return
+        const contRect = container.getBoundingClientRect()
+        let left = e.clientX - contRect.left - offset.x
+        let top = e.clientY - contRect.top - offset.y
+        left = Math.max(0, Math.min(left, contRect.width - logo.clientWidth))
+        top = Math.max(0, Math.min(top, contRect.height - logo.clientHeight))
+        const centerX = (left + logo.clientWidth / 2) / contRect.width
+        const centerY = (top + logo.clientHeight / 2) / contRect.height
+        logoState.x = centerX
+        logoState.y = centerY
+        logo.style.left = (left + logo.clientWidth / 2) + 'px'
+        logo.style.top = top + 'px'
+        logo.style.transform = 'translateX(-50%)'
+      })
+      window.addEventListener('pointerup', () => {
+        dragging = false
+        if (pointerId) try { logo.releasePointerCapture(pointerId) } catch { }
+        logo.style.cursor = 'grab'
+        pointerId = null
+      })
+    })()
+
+    async function renderComposite() {
+      exportStatus.textContent = 'Rendering...'
+      if (!umbrella.complete) await new Promise(r => umbrella.onload = r)
+      const baseW = umbrella.naturalWidth || container.clientWidth
+      const baseH = umbrella.naturalHeight || container.clientHeight
+      const canvas = document.createElement('canvas')
+      canvas.width = baseW
+      canvas.height = baseH
+      const ctx = canvas.getContext('2d')
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, baseW, baseH)
+      ctx.drawImage(umbrella, 0, 0, baseW, baseH)
+      ctx.save()
+      try {
+        ctx.globalCompositeOperation = 'color'
+        ctx.fillStyle = activeColor
+        ctx.fillRect(0, 0, baseW, baseH)
+        ctx.globalCompositeOperation = 'source-over'
+      } catch (e) { }
+      ctx.restore()
+      if (logoState.visible && logoState.img) {
+        const lw = baseW * 0.25
+        const lh = baseH * 0.08
+        const cx = logoState.x * baseW
+        const cy = logoState.y * baseH
+        const ldx = cx - lw / 2
+        const ldy = cy - lh / 2
+        ctx.drawImage(logoState.img, ldx, ldy, lw, lh)
+      }
+      exportStatus.textContent = ''
+      return canvas
+    }
+
+    async function downloadJpgHandler() {
+      downloadJpg.disabled = true
+      exportStatus.textContent = 'Rendering...'
+      try {
+        const canvas = await renderComposite()
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.92)
+        const a = document.createElement('a')
+        a.href = dataUrl
+        a.download = 'umbrella-preview.jpg'
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+      } finally {
+        downloadJpg.disabled = false
+        exportStatus.textContent = ''
+      }
+    }
+
+    downloadJpg.addEventListener('click', downloadJpgHandler)
+    window.addEventListener('resize', () => { if (logoState.visible) applyLogoToDOM() })
+  </script>
+</body>
+
+</html>
